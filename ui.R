@@ -42,8 +42,8 @@ shinyUI(fluidPage(
       
       # Input: Select number of rows to display ----
       radioButtons("disp", "Display",
-                   choices = c(Head = "head",
-                               All = "all"),
+                   choices = c(`First 5 rows` = "head",
+                               `All rows` = "all"),
                    selected = "head")
       
     ),
@@ -51,10 +51,11 @@ shinyUI(fluidPage(
     # Main panel for displaying outputs ----
     mainPanel(
       tabsetPanel(
-        tabPanel("PPP Data", tableOutput("ppp")),
-        tabPanel("Expenditure Data",  tableOutput("exp")),
-        tabPanel("Budget Share Data",  tableOutput("bsh")),
-        tabPanel("P vs Q Disp. plot", plotOutput("newplot"))
+        tabPanel("PPP", tableOutput("ppp")),
+        tabPanel("Expenditure", tableOutput("exp")),
+        tabPanel("Budget Share", tableOutput("bsh")),
+        tabPanel("Q Disp. Table", tableOutput("q_disp")),
+        tabPanel("P vs Q Disp. Plot", plotOutput("newplot"))
       )
     )
     
