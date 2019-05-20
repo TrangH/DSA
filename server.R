@@ -1,7 +1,7 @@
 library(shiny)
 
 # Define server logic to read selected file ----
-shinyServer(ffunction(input, output) {
+shinyServer(function(input, output) {
   
   output$ppp <- renderTable({
     req(input$file1)
