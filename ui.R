@@ -4,7 +4,7 @@ library(shiny)
 shinyUI(fluidPage(
   
   # App title ----
-  titlePanel("Uploading Files"),
+  titlePanel("Demand Function Analyses"),
   
   # Sidebar layout with input and output definitions ----
   sidebarLayout(
@@ -13,14 +13,15 @@ shinyUI(fluidPage(
     sidebarPanel(
       
       # Input: Select a file ----
-      fileInput("file1", "Choose CSV File",
-                multiple = FALSE,
-                accept = c("text/csv",
-                           "text/comma-separated-values,text/plain",
-                           ".csv")),
-      
-      # Horizontal line ----
-      tags$hr(),
+      fileInput("file1", "Upload PPP Data Here",
+                multiple = TRUE,
+                accept = c("text/csv", "text/comma-separated-values,text/plain",".csv")),
+      fileInput("file2", "Upload Expenditure Data Here",
+                multiple = TRUE, 
+                accept=c('text/csv', 'text/comma-separated-values,text/plain','.csv')),
+      fileInput("file3", "Upload Budget Share Data Here",
+                multiple = TRUE, 
+                accept=c('text/csv', 'text/comma-separated-values,text/plain','.csv')),
       
       # Input: Checkbox if file has header ----
       checkboxInput("header", "Header", TRUE),
@@ -39,9 +40,6 @@ shinyUI(fluidPage(
                                "Single Quote" = "'"),
                    selected = '"'),
       
-      # Horizontal line ----
-      tags$hr(),
-      
       # Input: Select number of rows to display ----
       radioButtons("disp", "Display",
                    choices = c(Head = "head",
@@ -52,10 +50,12 @@ shinyUI(fluidPage(
     
     # Main panel for displaying outputs ----
     mainPanel(
-      
-      # Output: Data file ----
-      tableOutput("contents")
-      
+      tabsetPanel(
+        tabPanel("PPP Data", tableOutput("ppp")),
+        tabPanel("Expenditure Data",  tableOutput("exp")),
+        tabPanel("Budget Share Data",  tableOutput("bsh")),
+        tabPanel("P vs Q Disp. plot", plotOutput("newplot"))
+      )
     )
     
   )
