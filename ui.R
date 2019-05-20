@@ -4,7 +4,7 @@ library(shiny)
 shinyUI(fluidPage(
   
   # App title ----
-  titlePanel("Demand Function Analyses"),
+  titlePanel("Demand System Analyses"),
   
   # Sidebar layout with input and output definitions ----
   sidebarLayout(
