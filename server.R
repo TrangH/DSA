@@ -2,7 +2,7 @@ library(shiny)
 
 # Define server logic to read selected file ----
 shinyServer(function(input, output) {
-  
+
   ###original data to display----
   output$ppp <- renderTable({
     req(input$file1)
@@ -236,4 +236,5 @@ output$newplot <- renderPlot(
       labs(x='Prices', y='Quantities')
      }
    )
+
 })
