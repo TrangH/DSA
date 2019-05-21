@@ -58,6 +58,5 @@ shinyUI(fluidPage(
         tabPanel("P vs Q Disp. Plot", plotOutput("newplot"))
       )
     )
-    
   )
 ))
