@@ -334,7 +334,7 @@ output$disp_plot <- renderPlot({
     #Contour plot----
     x=p_sd;y=q_sd;
     xy=data.frame(cbind(x,y));
-    ggplot(data=xy,aes(x,y)) + 
+    p<-ggplot(data=xy,aes(x,y)) + 
       geom_point(shape = 16,size=1.5, color="blue", fill="blue") +
       stat_density2d(aes(fill=..level..,alpha=..level..),geom='polygon',bins=40,n=40) + #, h = c(1, 1)
       scale_x_continuous(limits = c(0, 150))+
@@ -345,4 +345,5 @@ output$disp_plot <- renderPlot({
       guides(alpha="none") +
       commonTheme +
       labs(x='Price Dispersion', y='Quantity Dispersion')
+     p
   })
