@@ -55,7 +55,7 @@ ui <- fluidPage(
         tabPanel("Budget Share", tableOutput("bs")),
         tabPanel("Q Disp. Table", tableOutput("q_disp")),
         #
-        tabPanel("Price & Quantity Density Plot", plotOutput("density"),
+        tabPanel("Food Price & Quantity Density Plot", plotOutput("density"),
                  withMathJax(),
                  helpText('Note:',
                           br(),
@@ -67,7 +67,7 @@ ui <- fluidPage(
                           = 100 (log \\frac{q_{ic}}{Q^{1/2}_c} - log \\frac{q_{id}}{Q^{1/2}_d} )\\) for \\(i\\). 
                           The relative price difference is \\( 100(Dp_{i,cd}-logP_{cd})=100(log\\frac{p_{ic}}{P_c} - log \\frac{p_{id}}{P_d} ) \\).',
                  )),
-        tabPanel("Demand Curve Plot", plotOutput("demand_plot"),
+        tabPanel("Food Demand Curve Plot", plotOutput("demand_plot"),
               withMathJax(),
               helpText('Note:',
                  br(),
@@ -88,7 +88,7 @@ ui <- fluidPage(
                  '". Economic Record 95 (310): 358-385.'
                  )),
         #
-        tabPanel("P vs Q Disp. Plot", plotOutput("disp_plot"),
+        tabPanel("Dispersion Plot", plotOutput("disp_plot"),
                 withMathJax(),
                 helpText('Notes:',
                     br(),
@@ -106,7 +106,6 @@ ui <- fluidPage(
                     for \\(c\\) relative to \\(d\\).
                     The SD of prices is the square root of the Divisia variance of price differences, \\(\\sigma^2_{p,cd}=\\sum^9_{i=1}w_{i,cd}\\left(Dp_{i,cd}-DP_{cd}\\right)^2\\) 
                     where \\(Dp_{i,cd}=log p_{ic}-log p_{id}\\) is the log-difference between the 
-                    price of \\(i\\) in \\(c\\) and \\(d\\); and \\(DP_{cd}=\\sum^9_{i=1}w_{i,cd}Dp_{i,cd}\\) 
                     is the Divisia index of prices in \\(c\\) relative to \\(d\\).',
                     br(),
                     br(),
