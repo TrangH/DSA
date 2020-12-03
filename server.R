@@ -347,3 +347,4 @@ output$disp_plot <- renderPlot({
       labs(x='Price Dispersion', y='Quantity Dispersion')
      p
   })
+}
