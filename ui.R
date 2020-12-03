@@ -1,9 +1,3 @@
-mypackages <- c("shiny", "ggplot2", "RColorBrewer")
-checkpkg <- mypackages[!(mypackages %in% installed.packages()[,"Package"])];
-#if not, then install the missing packages  
-if(length(checkpkg))install.packages(checkpkg, dependencies = TRUE)
-#loading packages
-library(shiny); library(ggplot2); library(RColorBrewer); 
 
 # Define UI for data upload app ----
 ui <- fluidPage(
