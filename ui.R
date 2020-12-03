@@ -73,7 +73,7 @@ ui <- fluidPage(
                  br(),
                  br(),
                  'The points underlying this heat map are the log-differences 
-                 in the quantities of good \\(i\\) consumed and the corresponding relative 
+                 in the quantities of food consumed worldwide and the corresponding relative 
                  price differences between countries \\(c\\) and \\(d\\), for \\(c,d=1,...,176, d>c\\).
                  Quantities are adjusted for income differences (with an income elasticity of \\(\\frac{1}{2}\\) ), 
                  that is, \\(100 (Dq_{i,cd}-\\frac{1}{2}\\ log Q_{cd}) 
