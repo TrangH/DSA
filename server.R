@@ -133,6 +133,7 @@ server <- function(input, output) {
       q_ken1<-q_ken[,match(csort,colnames(q_ken))]
       ppp_ken1<-ppp_ken[,match(csort,colnames(ppp_ken))]
       #
+      i=1;
       logP_mat_food=NULL;logQ_mat_food=NULL;
       for (c in 1:ncol(ppp_ken1)){
         logp_mat_food=NULL;logq_mat_food=NULL; 
@@ -184,13 +185,72 @@ server <- function(input, output) {
       #ggplotly(p) #interactive plot not working currently
   })  
   
-###The demand function plot----
+###The demand curve plot----
 output$demand_plot <- renderPlot({
     ppp_ken<-ppp();exp_ken<-exp();bs_ken<-bs();
     q_ken=exp_ken[,-1]/ppp_ken[,-1] #per capita consumption = real income 
     csort<-names(sort(colSums(q_ken),decreasing=TRUE))
     q_ken1<-q_ken[,match(csort,colnames(q_ken))]
     ppp_ken1<-ppp_ken[,match(csort,colnames(ppp_ken))]
+    #
+    ###The quantity dispersion matrix ----
+    #compute the logExp_cd and sigma2_cd matrices
+    #[sigma is the bivariate variance matrix]
+    logq_list=list();bs_list=list(); 
+    logQ_mat=NULL;sigma2_mat=NULL;
+    for (c in 1:ncol(q_ken1)){
+      #logq_icd and w_icd
+      logq_mat=NULL;bs_mat=NULL;
+      for (d in 1:ncol(q_ken1)){
+        logq_icd=log(q_ken1[,c])-log(q_ken1[,d])
+        logq_mat=cbind(logq_mat,logq_icd);
+        #
+        bs_icd=(0.5*(bs_ken1[,c]+bs_ken1[,d]))/100 
+        bs_mat=cbind(bs_mat,bs_icd);
+      }
+      rownames(logq_mat)=rownames(bs_mat)=rownames(q_ken1);
+      colnames(logq_mat)=colnames(bs_mat)=colnames(q_ken1);
+      #
+      logq_list[[c]]=logq_mat; names(logq_list)[c]=colnames(q_ken1)[c];
+      #budget share matrix
+      bs_list[[c]]=bs_mat; names(bs_list)[c]=colnames(q_ken1)[c];
+      #logq_cd matrix
+      logQ_cd=colSums(logq_mat*bs_mat); 
+      logQ_mat=rbind(logQ_mat,logQ_cd);
+      #sigma2_cd matrix
+      sigma2_cd=colSums(bs_mat*sweep(logq_mat,2,logQ_cd,FUN='-')^2) #logq_cd does not change across items
+      sigma2_mat<-rbind(sigma2_mat,sigma2_cd)
+    }
+    colnames(logQ_mat)=rownames(logQ_mat)=colnames(q_ken1)
+    colnames(sigma2_mat)=rownames(sigma2_mat)=colnames(q_ken1)
+    
+    ###The price dispersion matrix ----
+    #compute the logP_cd and sigma2_P_cd matrices
+    logp_list=list(); 
+    logP_mat=NULL;sigma2_P_mat=NULL;
+    for (c in 1:ncol(ppp_ken1)){
+      #logp_icd and w_icd
+      logp_mat=NULL;bs_mat=NULL;
+      for (d in 1:ncol(ppp_ken1)){
+        logp_icd=log(ppp_ken1[,c])-log(ppp_ken1[,d])
+        logp_mat=cbind(logp_mat,logp_icd);
+        #
+        bs_icd=(0.5*(bs_ken1[,c]+bs_ken1[,d]))/100 
+        bs_mat=cbind(bs_mat,bs_icd);
+      }
+      rownames(logp_mat)=rownames(ppp_ken1);
+      colnames(logp_mat)=colnames(ppp_ken1);
+      #
+      logp_list[[c]]=logp_mat; names(logp_list)[c]=colnames(ppp_ken1)[c];
+      #logExp_cd matrix
+      logP_cd=colSums(logp_mat*bs_mat); 
+      logP_mat=rbind(logP_mat,logP_cd);
+      #sigma2_cd matrix
+      sigma2_P_cd=colSums(bs_mat*sweep(logp_mat,2,logP_cd,FUN='-')^2) #logExp_cd does not change across items
+      sigma2_P_mat<-rbind(sigma2_P_mat,sigma2_P_cd)
+    }
+    colnames(logP_mat)=rownames(logP_mat)=colnames(ppp_ken1)
+    colnames(sigma2_P_mat)=rownames(sigma2_P_mat)=colnames(ppp_ken1)  
     #
     i=1 #food
     logP_mat_food=NULL;logQ_mat_food=NULL;
@@ -352,6 +412,6 @@ output$disp_plot <- renderPlot({
       guides(alpha="none") +
       commonTheme +
       labs(x='Price Dispersion', y='Quantity Dispersion')
-     p
+    p
   })
 }
