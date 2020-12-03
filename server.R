@@ -1,70 +1,68 @@
-library(shiny)
-
-# Define server logic to read selected file ----
-shinyServer(function(input, output) {
-
-  ###original data to display----
-  output$ppp <- renderTable({
-    req(input$file1)
-    df <- read.csv(input$file1$datapath,
-                   header = input$header,
-                   sep = input$sep,
-                   quote = input$quote)
-    if(input$disp == "head") {
-      return(head(df))
-    } else {return(df)}
-  })
-  
-  output$exp <- renderTable({
-    req(input$file2)
-    df <- read.csv(input$file2$datapath,
-                   header = input$header,sep = input$sep,quote = input$quote)
-    if(input$disp == "head") {
-      return(head(df))
-    } else {return(df)}
-  })
-  
-  output$bsh <- renderTable({
-    req(input$file3)
-    df <- read.csv(input$file3$datapath,
-                   header = input$header,sep = input$sep,quote = input$quote)
-    if(input$disp == "head") {
-      return(head(df))
-    } else {return(df)}
-  })
-  
-  ####original data to plot----
-ppp <- reactive({ 
-    req(input$file1) 
-    inFile <- input$file1 
-    df <- read.csv(inFile$datapath, header = input$header, sep = input$sep,
-                   quote = input$quote)
-    return(df)
-  })
-
-exp <- reactive({ 
-    req(input$file2) ## ?req #  require that the input is available
-    inFile <- input$file2 
-    df <- read.csv(inFile$datapath, header = input$header, sep = input$sep,
-                   quote = input$quote)
-    return(df)
-   })  
-bs <- reactive({ 
-  req(input$file3) ## ?req #  require that the input is available
-  inFile <- input$file3 
-  df <- read.csv(inFile$datapath, header = input$header, sep = input$sep,
+server <- function(input, output) {
+####original data to plot----
+     ppp <- reactive({
+      if (is.null(input$file1)) {
+        #pre-load data if no input
+        id1<- "1SEOKJ4ULpweqIA6wAATgNT3fO8-6j987"# google file ID
+        read.csv(sprintf("https://docs.google.com/uc?id=%s&export=download", id1),
+                 header=TRUE,check.names=FALSE,stringsAsFactors=FALSE)
+      } else {
+        read.csv(input$file1$datapath, header = input$header, sep = input$sep,
                  quote = input$quote)
-  return(df)
-})  
+      }
+    })
+    
+    exp <- reactive({
+      if (is.null(input$file2)) {
+        id2<- "1Cyr41rV7I7hI1kKxawyaas90pzKrTqvy" 
+        read.csv(sprintf("https://docs.google.com/uc?id=%s&export=download", id2),
+                 header=TRUE,check.names=FALSE,stringsAsFactors=FALSE)
+      } else {
+        read.csv(input$file2$datapath, header = input$header, sep = input$sep,
+                 quote = input$quote)
+      }
+    })
+    
+    bs <- reactive({
+      if (is.null(input$file3)) {
+        id3<- "1H3O7-VK7JTP_JT-OYKHPgoZLJEq7hj7Z"
+        read.csv(sprintf("https://docs.google.com/uc?id=%s&export=download", id3),
+                 header=TRUE,check.names=FALSE,stringsAsFactors=FALSE)
+      } else {
+        read.csv(input$file3$datapath, header = input$header, sep = input$sep,
+                 quote = input$quote)
+      }
+    })
+
+###original data to display----
+  #[need to change this]
+  output$ppp <- renderTable({
+    df <- ppp()
+      if(input$disp == "all"){
+        return(df)
+        } else {return(head(df))}
+  })
+
+  output$exp <- renderTable({
+    df <- exp()
+    if(input$disp == "all"){
+      return(df)
+    } else {return(head(df))}
+  })
+  
+  output$bs <- renderTable({
+    df <- bs()
+    if(input$disp == "all"){
+      return(df)
+    } else {return(head(df))}
+  })
+  
 
   ###The q dispersion matrix----
   output$q_disp <- renderTable({
-    if (is.null(input$file1)| is.null(input$file2)| is.null(input$file3)){
-      return(NULL)
-    } else {
       ppp_ken<-ppp();exp_ken<-exp();bs_ken<-bs();
       ###Per capita real income ($)----
-      q_ken=exp_ken/ppp_ken #per capita consumption = real income 
+      q_ken=exp_ken[,-1]/ppp_ken[,-1] #per capita consumption = real income 
       #sort countries (column) by real income p.c----
       csort<-names(sort(colSums(q_ken),decreasing=TRUE))
       q_ken1<-q_ken[,match(csort,colnames(q_ken))]
@@ -114,29 +112,150 @@ bs <- reactive({
           colpos<-match(c_qlist[[j]],colnames(sigma2_mat))
           vec<-c(vec,mean(sqrt(sigma2_mat[rowpos,colpos])))
         }
-        sigma_mat<-rbind(sigma_mat,vec)
+        sigma_mat<-rbind(sigma_mat,round(vec,2))
       }
       colnames(sigma_mat)=rownames(sigma_mat)=c('Q1 (Richest)','Q2','Q3','Q4','Q5 (Poorest)')
       return(sigma_mat)
-      }
   })
+
+  ###Distribution of prices and quantities----
+  output$density <- renderPlot({
+      ppp_ken<-ppp();exp_ken<-exp();bs_ken<-bs();
+      q_ken=exp_ken[,-1]/ppp_ken[,-1] #per capita consumption = real income 
+      csort<-names(sort(colSums(q_ken),decreasing=TRUE))
+      q_ken1<-q_ken[,match(csort,colnames(q_ken))]
+      ppp_ken1<-ppp_ken[,match(csort,colnames(ppp_ken))]
+      #
+      logP_mat_food=NULL;logQ_mat_food=NULL;
+      for (c in 1:ncol(ppp_ken1)){
+        logp_mat_food=NULL;logq_mat_food=NULL; 
+        for (d in 1:ncol(ppp_ken1)){
+          logp_icd=log(ppp_ken1[i,c])-log(ppp_ken1[i,d])
+          logp_mat_food=cbind(logp_mat_food,logp_icd);
+          #
+          logq_icd=log(q_ken1[i,c])-log(q_ken1[i,d])
+          logq_mat_food=cbind(logq_mat_food,logq_icd);
+        }
+        logP_mat_food=rbind(logP_mat_food,logp_mat_food);
+        logQ_mat_food=rbind(logQ_mat_food,logq_mat_food);
+        #
+      }
+      colnames(logP_mat_food)=rownames(logP_mat_food)=colnames(logQ_mat_food)=rownames(logQ_mat_food)=colnames(ppp_ken1)
+      #
+      logP_mat_food<-logP_mat_food-logP_mat; logQ_mat_food<-logQ_mat_food-(1/2)*logQ_mat
+      #plot data
+      x=100*as.vector(logP_mat_food[upper.tri(logP_mat_food,diag=FALSE)]); #length(x)
+      y=100*as.vector(logQ_mat_food[upper.tri(logQ_mat_food,diag=FALSE)]); #length(y)
+      colorscale = scale_fill_gradientn(colours =  rev(rainbow(7)[-7]))
+      xy=data.frame(cbind(x,y)); 
+      #
+      commonTheme = list(labs(color="",fill="",
+                              x="",
+                              y=""),
+                         theme_bw(),
+                         theme(axis.line = element_line(colour = "black"),
+                               panel.grid.major = element_blank(),
+                               panel.grid.minor = element_blank(),
+                               panel.border = element_blank(),
+                               panel.background = element_blank()), 
+                         theme(legend.position="top"),
+                         theme(text = element_text(size=20),
+                               axis.title=element_text(size=20)
+                               #axis.text = element_text(size=40)
+                         ))
+      # 
+      dfGamma=data.frame(Value=rbind(as.matrix(xy$x),as.matrix(xy$y)),
+                         Variable=c(rep('Prices',nrow(xy)),rep('Quantities',nrow(xy))))
+      p <- ggplot(dfGamma, aes(x = Value, fill = Variable, color = Variable)) +
+        geom_density(aes(group = Variable), alpha=0.5) +
+        scale_color_manual(values=c('blue','red')) +
+        scale_fill_manual(values=c('blue','red')) +
+        geom_vline(xintercept = 0, linetype="dashed", 
+                   color = "darkgreen", size=0.8) +
+        commonTheme + labs(x='Price/Quantity', y='Density')
+      p
+      #ggplotly(p) #interactive plot not working currently
+  })  
   
-  ###The P vs Q dispersion plot----
-output$newplot <- renderPlot(
-  if (is.null(input$file1)| is.null(input$file2)| is.null(input$file3)){
-    return(NULL)
-  } else {
+###The demand function plot----
+output$demand_plot <- renderPlot({
+    ppp_ken<-ppp();exp_ken<-exp();bs_ken<-bs();
+    q_ken=exp_ken[,-1]/ppp_ken[,-1] #per capita consumption = real income 
+    csort<-names(sort(colSums(q_ken),decreasing=TRUE))
+    q_ken1<-q_ken[,match(csort,colnames(q_ken))]
+    ppp_ken1<-ppp_ken[,match(csort,colnames(ppp_ken))]
+    #
+    i=1 #food
+    logP_mat_food=NULL;logQ_mat_food=NULL;
+    for (c in 1:ncol(ppp_ken1)){
+      logp_mat_food=NULL;logq_mat_food=NULL; 
+      for (d in 1:ncol(ppp_ken1)){
+        logp_icd=log(ppp_ken1[i,c])-log(ppp_ken1[i,d])
+        logp_mat_food=cbind(logp_mat_food,logp_icd);
+        #
+        logq_icd=log(q_ken1[i,c])-log(q_ken1[i,d])
+        logq_mat_food=cbind(logq_mat_food,logq_icd);
+      }
+      logP_mat_food=rbind(logP_mat_food,logp_mat_food);
+      logQ_mat_food=rbind(logQ_mat_food,logq_mat_food);
+      #
+    }
+    colnames(logP_mat_food)=rownames(logP_mat_food)=colnames(logQ_mat_food)=rownames(logQ_mat_food)=colnames(ppp_ken1)
+    #
+    logP_mat_food<-logP_mat_food-logP_mat; logQ_mat_food<-logQ_mat_food-(1/2)*logQ_mat
+    #plot data
+    x=100*as.vector(logP_mat_food[upper.tri(logP_mat_food,diag=FALSE)]); #length(x)
+    y=100*as.vector(logQ_mat_food[upper.tri(logQ_mat_food,diag=FALSE)]); #length(y)
+    colorscale = scale_fill_gradientn(colours =  rev(rainbow(7)[-7]))
+    xy=data.frame(cbind(x,y)); 
+    # 
+    commonTheme = list(labs(color="",fill="",
+                            x="",
+                            y=""),
+                       theme_bw(),
+                       theme(axis.line = element_line(colour = "black"),
+                             panel.grid.major = element_blank(),
+                             panel.grid.minor = element_blank(),
+                             panel.border = element_blank(),
+                             panel.background = element_blank()), 
+                       theme(legend.position="none"),
+                       theme(text = element_text(size=20),
+                             axis.title=element_text(size=20)
+                             #axis.text = element_text(size=40)
+                       ))
+    
+    #Brew a colorscale
+    colorscale = scale_fill_gradientn(colours =  rev(rainbow(7)[-7]))
+    #contour plot----
+    p<-ggplot(data=xy,aes(x,y)) + 
+      geom_point(shape = 16,size=1.5, color="blue", fill="blue") +
+      stat_density2d(aes(fill=..level..,alpha=..level..),geom='polygon',bins=40,n=40) + #, h = c(1, 1)
+      scale_x_continuous(limits = c(-100,100)) +
+      scale_y_continuous(limits = c(-200,300)) +
+      colorscale + #coord_fixed() +
+      #
+      stat_smooth(method="lm", se=FALSE, color = 'darkred') +
+      #geom_abline(slope=1,size=1,linetype=2,size=1.5,colour="darkred") +
+      guides(alpha="none") +
+      commonTheme +
+      labs(x='Quantity', y='Prices')
+    p
+  })
+
+  
+###The P vs Q dispersion plot----
+output$disp_plot <- renderPlot({
     ppp_ken<-ppp();exp_ken<-exp();bs_ken<-bs();
     ###Per capita real income ($)----
-    q_ken=exp_ken/ppp_ken #per capita consumption = real income 
-    #sort countries (column) by real income p.c----
+    q_ken=exp_ken[,-1]/ppp_ken[,-1] #per capita consumption = real income 
+    #sort countries (column) by real income p.c
     csort<-names(sort(colSums(q_ken),decreasing=TRUE))
     q_ken1<-q_ken[,match(csort,colnames(q_ken))]
     ppp_ken1<-ppp_ken[,match(csort,colnames(ppp_ken))]
     bs_ken1<-bs_ken[,match(csort,colnames(bs_ken))]
     #[Important: Must use for loop here, not within reactive{}]
     ###The quantity dispersion matrix ----
-    #compute the logExp_cd and sigma2_cd matrices----
+    #compute the logExp_cd and sigma2_cd matrices
     #[sigma is the bivariate variance matrix]
     logq_list=list();bs_list=list(); 
     logQ_mat=NULL;sigma2_mat=NULL;
@@ -167,7 +286,7 @@ output$newplot <- renderPlot(
     colnames(sigma2_mat)=rownames(sigma2_mat)=colnames(q_ken1)
     
     ###The price dispersion matrix ----
-    #compute the logP_cd and sigma2_P_cd matrices----
+    #compute the logP_cd and sigma2_P_cd matrices
     logp_list=list(); 
     logP_mat=NULL;sigma2_P_mat=NULL;
     for (c in 1:ncol(ppp_ken1)){
@@ -196,8 +315,7 @@ output$newplot <- renderPlot(
     #dispersion measure  
     p_sd<-100*sqrt(as.numeric(sigma2_P_mat[upper.tri(sigma2_P_mat,diag=FALSE)]))
     q_sd<-100*sqrt(as.numeric(sigma2_mat[upper.tri(sigma2_mat,diag=FALSE)]))
-    ###ggplot contour 
-    library(ggplot2)
+    #
     commonTheme = list(labs(color="",fill="",
                             x="",
                             y=""),
@@ -208,21 +326,14 @@ output$newplot <- renderPlot(
                              panel.border = element_blank(),
                              panel.background = element_blank()), 
                        theme(legend.position="none"),
-                       theme(text = element_text(size=15),
-                             axis.title=element_text(size=12)
+                       theme(text = element_text(size=20),
+                             axis.title=element_text(size=20)
                              #axis.text = element_text(size=40)
                        ))
-    
-    #Brew a colorscale
-    library(RColorBrewer)
-    #colorscale = scale_fill_gradientn(
-    #  colors = rev(brewer.pal(9, "YlGnBu")),
-    #  values = c(0, exp(seq(-3, 0, length.out = 10))))
     colorscale = scale_fill_gradientn(colours =  rev(rainbow(7)[-7]))
-    #contour plot----
+    #Contour plot----
     x=p_sd;y=q_sd;
-    xy=data.frame(cbind(x,y));#xlab='Prices'; ylab='Quantities'
-    #xlab=expression(paste(Delta, "log S",sep='')[ct]);ylab=expression(paste(Delta, "log r",sep='')[ict])
+    xy=data.frame(cbind(x,y));
     ggplot(data=xy,aes(x,y)) + 
       geom_point(shape = 16,size=1.5, color="blue", fill="blue") +
       stat_density2d(aes(fill=..level..,alpha=..level..),geom='polygon',bins=40,n=40) + #, h = c(1, 1)
@@ -233,8 +344,5 @@ output$newplot <- renderPlot(
       geom_abline(slope=1,size=1,linetype=2,size=1.5,colour="darkred") +
       guides(alpha="none") +
       commonTheme +
-      labs(x='Prices', y='Quantities')
-     }
-   )
-
-})
+      labs(x='Price Dispersion', y='Quantity Dispersion')
+  })
